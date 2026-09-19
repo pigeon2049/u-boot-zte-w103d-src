@@ -12,8 +12,15 @@ W103D is a set-top box with the following specification:
  - eMMC (SD_EMMC_C, 8-bit HS200)
  - SDIO Wi-Fi/BT module on SD_EMMC_B (initialized by Linux, not U-Boot)
 
-Status: UNTESTED draft. Do not flash the resulting FIP without a serial
-console and a verified maskrom USB-burning recovery path.
+Status: hardware-verified via chainload (model ``ZTE W103D``, eMMC,
+Wi-Fi, HDMI logo, cold/warm reboot). See Deployment below.
+
+Secure boot: this box has eFuse secure-boot enabled. BL2 only accepts
+the vendor signing key: a self-signed BL33 (default Amlogic keys) is
+rejected with ``BL2 report Error, code= 19`` after a complete transfer.
+FIP replacement is therefore impossible without the vendor private key.
+Do NOT build or flash a full FIP for this board; the supported route is
+chainload, which leaves the vendor DDR/BL2/BL31 untouched.
 
 U-Boot Compilation
 ------------------
@@ -28,20 +35,32 @@ The defconfig is derived from sei510_defconfig: same AO UART
 (0xff803000), same eMMC controller layout, plus CONFIG_MMC_PWRSEQ for the
 board eMMC reset GPIO. The environment offset (0xB400000, 180MiB) matches
 the W103D eMMC env partition, not the SEI510 boot0 location, so the
-ENV_MMC_EMMC_HW_PARTITION option is deliberately absent.
+ENV_MMC_EMMC_HW_PARTITION option is deliberately absent. Production uses
+``ENV_IS_NOWHERE`` (never reads eMMC env, never runs the vendor bootcmd);
+the boot command below is fully self-contained.
 
-U-Boot Signing with Pre-Built FIP repo
---------------------------------------
+Deployment (chainload)
+----------------------
 
-.. code-block:: bash
+Copy the resulting ``u-boot.bin`` to the boot FAT partition as
+``u-boot.ext``. The vendor BL33 runs ``emmc_autoscript``, which loads
+``u-boot.ext`` to ``0x1000000`` and jumps with ``go``. A missing
+``u-boot.ext`` falls back to vendor Linux boot. There is no brick path
+(maskrom + re-flash always recovers).
 
-    $ git clone https://github.com/LibreELEC/amlogic-boot-fip --depth=1
-    $ cd amlogic-boot-fip
-    $ mkdir my-output-dir
-    $ ./build-fip.sh w103d /path/to/u-boot/u-boot.bin my-output-dir
+Boot contract (FAT partition, eMMC ``mmc 2:1``):
 
-This requires a ``w103d`` board directory in amlogic-boot-fip: reuse the
-generic G12A ``bl2.bin``/``bl31.img``/DDR firmware blobs and supply the
-board-specific ``acs.bin`` extracted from the factory ``DDR.USB``
-(W103D uses LPDDR4, so the DDR4-based sei510/u200 acs files must NOT be
-used). See the W103D project notes for the extraction offsets.
+ - ``uEnv.txt`` with ``LINUX`` / ``INITRD`` / ``FDT`` / ``APPEND``
+   (e.g. ``LINUX=/zImage``, ``INITRD=/ramdisk-w103d.img``,
+   ``FDT=/dtb-w103d/meson-g12a-w103d.dtb``)
+ - optional ``bootup.bmp`` (1280x720 BMP, shown centered via
+   ``bmp display``; a missing file never blocks boot)
+ - ``/w103d-video`` (``ok`` / ``fail``) is reported in the device-tree
+   root for black-box verification:
+   ``cat /proc/device-tree/w103d-video``
+
+HDMI notes: when the sink provides no usable mode (e.g. 4K-only EDID
+beyond the VENC 1920x1200 limit), this port brings HDMI up at safe
+1080p60 instead of dropping to CVBS (see the driver patches in
+``patches/``). eMMC is fixed at mmc dev 2 via DTS aliases, immune to
+SDIO probe order.
