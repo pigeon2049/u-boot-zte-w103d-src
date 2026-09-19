@@ -1,0 +1,47 @@
+.. SPDX-License-Identifier: GPL-2.0+
+
+U-Boot for ZTE W103D (S905L3A)
+==============================
+
+W103D is a set-top box with the following specification:
+
+ - Amlogic S905L3A (G12A family) ARM Cortex-A53 quad-core SoC
+ - 2GB LPDDR4 SDRAM (16-bit)
+ - 10/100 Ethernet (Internal PHY)
+ - 1x USB Host
+ - eMMC (SD_EMMC_C, 8-bit HS200)
+ - SDIO Wi-Fi/BT module on SD_EMMC_B (initialized by Linux, not U-Boot)
+
+Status: UNTESTED draft. Do not flash the resulting FIP without a serial
+console and a verified maskrom USB-burning recovery path.
+
+U-Boot Compilation
+------------------
+
+.. code-block:: bash
+
+    $ export CROSS_COMPILE=aarch64-linux-gnu-
+    $ make w103d_defconfig
+    $ make
+
+The defconfig is derived from sei510_defconfig: same AO UART
+(0xff803000), same eMMC controller layout, plus CONFIG_MMC_PWRSEQ for the
+board eMMC reset GPIO. The environment offset (0xB400000, 180MiB) matches
+the W103D eMMC env partition, not the SEI510 boot0 location, so the
+ENV_MMC_EMMC_HW_PARTITION option is deliberately absent.
+
+U-Boot Signing with Pre-Built FIP repo
+--------------------------------------
+
+.. code-block:: bash
+
+    $ git clone https://github.com/LibreELEC/amlogic-boot-fip --depth=1
+    $ cd amlogic-boot-fip
+    $ mkdir my-output-dir
+    $ ./build-fip.sh w103d /path/to/u-boot/u-boot.bin my-output-dir
+
+This requires a ``w103d`` board directory in amlogic-boot-fip: reuse the
+generic G12A ``bl2.bin``/``bl31.img``/DDR firmware blobs and supply the
+board-specific ``acs.bin`` extracted from the factory ``DDR.USB``
+(W103D uses LPDDR4, so the DDR4-based sei510/u200 acs files must NOT be
+used). See the W103D project notes for the extraction offsets.

@@ -1,0 +1,9 @@
+W103D
+M:	pigeon2049 <lai@live.cn>
+S:	Maintained
+L:	u-boot-amlogic@groups.io
+F:	board/amlogic/w103d/
+F:	configs/w103d_defconfig
+F:	dts/upstream/src/arm64/amlogic/meson-g12a-w103d.dts
+F:	arch/arm/dts/meson-g12a-w103d-u-boot.dtsi
+F:	doc/board/amlogic/w103d.rst

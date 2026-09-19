@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2026 pigeon2049 <lai@live.cn>
+ *
+ * Reuse the shared G12A bits, but keep the Linux MMC aliases: the common
+ * file deletes them and falls back to probe order, which would renumber the
+ * eMMC (SD_EMMC_C) depending on the SDIO Wi-Fi probe outcome. The board
+ * environment lives at a fixed eMMC offset and ENV_MMC_DEVICE_INDEX in the
+ * defconfig relies on the eMMC always being mmc dev 2.
+ */
+
+#include "meson-g12-common-u-boot.dtsi"
+
+/ {
+	aliases {
+		mmc0 = &sd_emmc_b;
+		mmc1 = &sd_emmc_a;
+		mmc2 = &sd_emmc_c;
+	};
+};
