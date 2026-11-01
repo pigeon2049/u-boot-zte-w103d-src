@@ -1,0 +1,49 @@
+From: pigeon2049 <lai@live.cn>
+Subject: [PATCH] mmc: meson_gx_mmc: clear inherited delay and adjust registers
+
+When U-Boot is chainloaded, the previous loader has already tuned the
+controller and left its data delay lines and resampling settings in
+DELAY1/DELAY2/ADJUST. This driver never programs those registers, so the
+left-over tuning, chosen for another clock and phase, decides whether
+reads work. On a ZTE W103D board the vendor loader left ADJUST =
+0x00142000 (resampling enabled, delay 20), and eMMC access failed on some
+boots (even "mmc rescan" kept failing within the boot) and worked on
+others. Linux resets them before tuning; clear them at probe.
+
+---
+diff --git a/drivers/mmc/meson_gx_mmc.c b/drivers/mmc/meson_gx_mmc.c
+index 76af3873..22f6ab1c 100644
+--- a/drivers/mmc/meson_gx_mmc.c
++++ b/drivers/mmc/meson_gx_mmc.c
+@@ -361,6 +361,17 @@ static int meson_mmc_probe(struct udevice *dev)
+ 	mmc->priv = pdata;
+ 	upriv->mmc = mmc;
+ 
++	/*
++	 * When chainloaded, the previous loader may have left its tuned data
++	 * delay lines and resampling settings behind (DELAY1/DELAY2/ADJUST on
++	 * v3 controllers, DELAY/ADJUST on v2). This driver never programs them,
++	 * so a stale tuning result for another clock and phase decides whether
++	 * reads work. Start from a clean state, as Linux does.
++	 */
++	meson_write(mmc, 0, MESON_SD_EMMC_DELAY1);
++	meson_write(mmc, 0, MESON_SD_EMMC_DELAY2);
++	meson_write(mmc, 0, MESON_SD_EMMC_ADJUST);
++
+ 	mmc_set_clock(mmc, cfg->f_min, MMC_CLK_ENABLE);
+ 
+ #if CONFIG_IS_ENABLED(MMC_PWRSEQ)
+diff --git a/drivers/mmc/meson_gx_mmc.h b/drivers/mmc/meson_gx_mmc.h
+index 8974b78f..85dfb637 100644
+--- a/drivers/mmc/meson_gx_mmc.h
++++ b/drivers/mmc/meson_gx_mmc.h
+@@ -22,6 +22,9 @@ enum meson_gx_mmc_compatible {
+ #define SD_EMMC_CLKSRC_DIV2		1000000000	/* 1 GHz */
+ 
+ #define MESON_SD_EMMC_CLOCK		0x00
++#define MESON_SD_EMMC_DELAY1		0x04
++#define MESON_SD_EMMC_DELAY2		0x08
++#define MESON_SD_EMMC_ADJUST		0x0c
+ #define   CLK_MAX_DIV			63
+ #define   CLK_SRC_24M			(0 << 6)
+ #define   CLK_SRC_DIV2			(1 << 6)

@@ -63,4 +63,6 @@ HDMI notes: when the sink provides no usable mode (e.g. 4K-only EDID
 beyond the VENC 1920x1200 limit), this port brings HDMI up at safe
 1080p60 instead of dropping to CVBS (see the driver patches in
 ``patches/``). eMMC is fixed at mmc dev 2 via DTS aliases, immune to
-SDIO probe order.
+SDIO probe order. The eMMC controller's delay and resampling registers
+left behind by the vendor BL33's tuning are cleared at probe
+(``patches/0004``); otherwise reads could fail on some boots.
