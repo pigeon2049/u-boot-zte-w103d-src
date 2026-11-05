@@ -1,11 +1,11 @@
 .. SPDX-License-Identifier: GPL-2.0+
 
-U-Boot for ZTE W103D (S905L3A)
-==============================
+U-Boot for ZTE W103D (S905X2)
+=============================
 
 W103D is a set-top box with the following specification:
 
- - Amlogic S905L3A (G12A family) ARM Cortex-A53 quad-core SoC
+ - Amlogic S905X2 (G12A family) ARM Cortex-A53 quad-core SoC
  - 2GB LPDDR4 SDRAM (16-bit)
  - 10/100 Ethernet (Internal PHY)
  - 1x USB Host

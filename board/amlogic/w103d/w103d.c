@@ -3,7 +3,7 @@
  * Copyright (C) 2026 pigeon2049 <lai@live.cn>
  *
  * Derived from board/amlogic/sei510/sei510.c (BayLibre, Neil Armstrong).
- * Only the serial-number string differs; the S905L3A shares the G12A
+ * Only the serial-number string differs; the S905X2 shares the G12A
  * serial/ethaddr layout with the other G12A set-top-box boards.
  */
 

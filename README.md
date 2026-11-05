@@ -1,6 +1,6 @@
-# U-Boot port for ZTE W103D (S905L3A)
+# U-Boot port for ZTE W103D (S905X2)
 
-Mainline U-Boot board support for the ZTE W103D OTT box (Amlogic S905L3A / G12A family),
+Mainline U-Boot board support for the ZTE W103D OTT box (Amlogic S905X2 / G12A family),
 verified on real hardware. Used as a chainload `u-boot.ext` jumped to from the vendor
 BL33 via `go` (the box has eFuse secure-boot enabled, so FIP replacement is not possible
 without the vendor key).
